@@ -16,55 +16,55 @@ struct Preferences {
   
   let suiteName: String
   let userDefaults: UserDefaults
-
-
+  
+  
   var allKeys: [String] {
     userDefaults.dictionaryRepresentation().map { $0.key }
   }
   
-  var systemGlobalKeys: [String] {
+  var networkGlobalKeys: [String] {
     keylist(kCFPreferencesAnyApplication, kCFPreferencesAnyUser, kCFPreferencesAnyHost)
   }
-
-  var systemHostGlobalKeys: [String] {
+  
+  var systemGlobalKeys: [String] {
     keylist(kCFPreferencesAnyApplication, kCFPreferencesAnyUser, kCFPreferencesCurrentHost)
   }
-
+  
   var hostGlobalKeys: [String] {
-   keylist(kCFPreferencesAnyApplication, kCFPreferencesCurrentUser, kCFPreferencesCurrentHost)
+    keylist(kCFPreferencesAnyApplication, kCFPreferencesCurrentUser, kCFPreferencesCurrentHost)
   }
-
+  
   var userGlobalKeys: [String] {
     keylist(kCFPreferencesAnyApplication, kCFPreferencesCurrentUser, kCFPreferencesAnyHost)
   }
-
+  
   var globalKeys: [String] {
     var globalKeys = Set(userGlobalKeys)
-    globalKeys.formUnion(systemGlobalKeys)
+    globalKeys.formUnion(networkGlobalKeys)
     globalKeys.formUnion(hostGlobalKeys)
     return Array(globalKeys)
   }
-
+  
   var managedKeys: [String] {
     allKeys.filter { userDefaults.objectIsForced(forKey: $0) }
   }
-
+  
   var userKeys: [String] {
     keylist(suiteName as CFString, kCFPreferencesCurrentUser, kCFPreferencesAnyHost)
   }
-
-  var systemKeys: [String] {
+  
+  var networkKeys: [String] {
     keylist(suiteName as CFString, kCFPreferencesAnyUser, kCFPreferencesAnyHost)
   }
-
-  var systemHostKeys: [String] {
-   keylist(suiteName as CFString, kCFPreferencesAnyUser, kCFPreferencesCurrentHost)
+  
+  var systemKeys: [String] {
+    keylist(suiteName as CFString, kCFPreferencesAnyUser, kCFPreferencesCurrentHost)
   }
-
+  
   var hostKeys: [String] {
     keylist(suiteName as CFString, kCFPreferencesCurrentUser, kCFPreferencesCurrentHost)
   }
-
+  
   var volatileKeys: [String] {
     let vDomains = userDefaults.volatileDomainNames
     var volatileKeys = Set<String>()
@@ -75,17 +75,17 @@ struct Preferences {
     }
     return Array(volatileKeys)
   }
-
+  
   // MARK: functions
-
+  
   func keylist(_ applicationID: CFString, _ userName: CFString, _ hostName: CFString) -> [String] {
     CFPreferencesCopyKeyList(applicationID, userName, hostName) as? [String] ?? []
   }
-
+  
   func isManaged(_ key: String) -> Bool {
     userDefaults.objectIsForced(forKey: key)
   }
-
+  
   func level(for key: String) -> String? {
     if !allKeys.contains(where: {$0 == key}) {
       return nil
@@ -111,16 +111,16 @@ struct Preferences {
     if systemGlobalKeys.contains(where: {$0 == key}) {
       return "global/system"
     }
-    if systemHostGlobalKeys.contains(where: {$0 == key}) {
-      return "global/system/host"
+    if networkKeys.contains(where: {$0 == key}) {
+      return "network"
     }
-    if systemHostKeys.contains(where: {$0 == key}) {
-      return "system/host/app"
+    if networkGlobalKeys.contains(where: {$0 == key}) {
+      return "global/network"
     }
     if volatileKeys.contains(where: {$0 == key}) {
       return "volatile"
     }
-
+    
     return nil
   }
 }
