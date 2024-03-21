@@ -13,14 +13,15 @@ struct Plist2Profile: ParsableCommand {
   static var configuration = CommandConfiguration(
     commandName: "plist2profile",
     abstract: "converts a standard preference plist file to a mobileconfig profile",
-    usage: "plist2profile <identifier> <plist> ...",
+    usage: "plist2profile --identifier <identifier> <plist> ...",
     version: "0.1"
   )
-  
+
   // MARK: arguments,options, flags
-  @Argument(
+  @Option(
+    name: .shortAndLong,
     help: ArgumentHelp(
-      "the payload identifier for the profile",
+      "the identifier for the profile",
       valueName: "identifier"
     )
   )
@@ -52,6 +53,12 @@ struct Plist2Profile: ParsableCommand {
   )
   var displayName = ""
 
+  @Flag(
+    name: .customLong("user"),
+    help: "sets the scope for the profile to 'User' (otherwise scope is 'System')"
+  )
+  var userScope = false
+
   // TODO: option to create a modern or mcx profile
 
   // MARK: variables
@@ -59,7 +66,7 @@ struct Plist2Profile: ParsableCommand {
   var uuid = UUID()
   var payloadVersion = 1
   var payloadType = "Configuration"
-  var payloadScope = "System" // or "User"
+  var payloadScope = "System"
 
   // TODO:  missing keys for profile
   // removal disallowed
@@ -100,7 +107,11 @@ struct Plist2Profile: ParsableCommand {
 
     // if output is empty, generate file name
     if outputPath.isEmpty {
-      outputPath = identifier.appending(".plist")
+      outputPath = identifier.appending(".mobileConfig")
+    }
+
+    if userScope {
+      payloadScope = "User"
     }
   }
 
@@ -164,9 +175,11 @@ struct Plist2Profile: ParsableCommand {
     // insert payloads array
     profileDict["PayloadContent"] = payloads
 
-    let profileURL = URL(filePath: identifier)
-      .appendingPathExtension("mobileconfig")
+    let profileURL = URL(filePath: outputPath)
     try profileDict.write(to: profileURL)
+
+    // TODO: sign profile after creation
+
     print(profileURL.relativePath)
   }
 }
