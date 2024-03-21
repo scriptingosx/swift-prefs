@@ -8,6 +8,7 @@
 import Foundation
 import ArgumentParser
 
+@main
 struct Plist2Profile: ParsableCommand {
   static var configuration = CommandConfiguration(
     commandName: "plist2profile",
