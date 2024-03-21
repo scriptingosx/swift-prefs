@@ -58,8 +58,12 @@ struct Plist2Profile: ParsableCommand {
     help: "sets the scope for the profile to 'User' (otherwise scope is 'System')"
   )
   var userScope = false
-
-  // TODO: option to create a modern or mcx profile
+  
+  @Flag(
+    name: .customLong("mcx"),
+    help: "creates the profile in macx format (default: modern)"
+    )
+  var mcx = false
 
   // MARK: variables
 
@@ -121,26 +125,36 @@ struct Plist2Profile: ParsableCommand {
     }
   }
 
-  func createModernPayload(plistPath: String) throws -> NSDictionary {
-    let payloadUUID = UUID()
-    // determine filename from path
-    let plistURL = URL(fileURLWithPath: plistPath)
-    let plistname = plistURL.deletingPathExtension().lastPathComponent
-    guard let payload = try? NSMutableDictionary(contentsOf: plistURL, error: ())
-    else {
-      try exit("file at '\(plistPath)' might not be a plist!", code: 65)
-    }
+  func createModernPayload(name: String, plist: NSDictionary) throws -> NSDictionary {
+    let mutablePayload = plist.mutableCopy() as! NSMutableDictionary
     // payload keys
-    payload["PayloadIdentifier"] = plistname
-    payload["PayloadType"] = plistname
-    payload["PayloadDisplayName"] = displayName
-    payload["PayloadUUID"] = payloadUUID.uuidString
-    payload["PayloadVersion"] = payloadVersion
+    mutablePayload["PayloadIdentifier"] = name
+    mutablePayload["PayloadType"] = name
+    mutablePayload["PayloadDisplayName"] = displayName
+    mutablePayload["PayloadUUID"] = UUID().uuidString
+    mutablePayload["PayloadVersion"] = payloadVersion
 
     if !organization.isEmpty {
-      payload["PayloadOrganization"] = organization
+      mutablePayload["PayloadOrganization"] = organization
     }
-    return payload
+    return mutablePayload
+  }
+
+  func createMCXPayload(name: String, plist: NSDictionary) throws -> NSDictionary {
+    let mcxPayload = NSMutableDictionary()
+    mcxPayload["PayloadIdentifier"] = name
+    mcxPayload["PayloadType"] = "com.apple.ManagedClient.preferences"
+    mcxPayload["PayloadDisplayName"] = displayName
+    mcxPayload["PayloadUUID"] = UUID().uuidString
+    mcxPayload["PayloadVersion"] = payloadVersion
+    
+    let prefSettings = NSDictionary(object: plist, forKey: "mcx_preference_settings" as NSString)
+    let prefArray = NSArray(object: prefSettings)
+    let forcedDict = NSDictionary(object: prefArray, forKey: "Forced" as NSString)
+    let domainDict = NSDictionary(object: forcedDict, forKey: name as NSString)
+    mcxPayload["PayloadContent"] = domainDict
+
+    return mcxPayload
   }
 
   // MARK: run
@@ -167,9 +181,19 @@ struct Plist2Profile: ParsableCommand {
     let payloads = NSMutableArray()
 
     for plistPath in plistPaths {
-      let payload = try createModernPayload(plistPath: plistPath)
-      payloads.add(payload)
 
+      // determine filename from path
+      let plistURL = URL(fileURLWithPath: plistPath)
+      let plistname = plistURL.deletingPathExtension().lastPathComponent
+      guard let plistdict = try? NSDictionary(contentsOf: plistURL, error: ())
+      else {
+        try exit("file at '\(plistPath)' might not be a plist!", code: 65)
+      }
+
+      let payload = mcx ? try createMCXPayload(name: plistname, plist: plistdict)
+                 : try createModernPayload(name: plistname, plist: plistdict)
+
+      payloads.add(payload)
     }
     
     // insert payloads array
