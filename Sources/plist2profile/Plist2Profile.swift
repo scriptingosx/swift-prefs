@@ -62,7 +62,6 @@ struct Plist2Profile: ParsableCommand {
   var payloadScope = "System" // or "User"
 
   // TODO:  missing keys for profile
-  // payload scope
   // removal disallowed
   // removalDate, duration until removal
   // description
@@ -123,8 +122,8 @@ struct Plist2Profile: ParsableCommand {
     // payload keys
     payload["PayloadIdentifier"] = plistname
     payload["PayloadType"] = plistname
-    payload["PayloadDisplayName"] = "\(displayName): \(plistname)"
-    payload["PayloadUUID"] = payloadUUID.description
+    payload["PayloadDisplayName"] = displayName
+    payload["PayloadUUID"] = payloadUUID.uuidString
     payload["PayloadVersion"] = payloadVersion
 
     if !organization.isEmpty {
@@ -140,12 +139,10 @@ struct Plist2Profile: ParsableCommand {
     try validatePlists()
     populateDefaults()
 
-    print("Hello, plist2profile!")
-
-    // Boilerplate
+    // Boilerplate keys
     let profileDict: NSMutableDictionary = [
       "PayloadIdentifier": identifier,
-      "PayloadUUID": uuid.description,
+      "PayloadUUID": uuid.uuidString,
       "PayloadVersion": payloadVersion,
       "PayloadType": payloadType,
       "PayloadDisplayName": displayName,
@@ -162,13 +159,14 @@ struct Plist2Profile: ParsableCommand {
       let payload = try createModernPayload(plistPath: plistPath)
       payloads.add(payload)
 
-      // insert payloads array
-      profileDict["PayloadContent"] = payloads
     }
+    
+    // insert payloads array
+    profileDict["PayloadContent"] = payloads
 
-    guard let plistData = try? PropertyListSerialization.data(fromPropertyList: profileDict, format: .xml, options: .zero)
-    else { try exit("could generate property list", code: 73) }
-
-    print(String(data: plistData, encoding: .utf8) ?? "<no data>")
+    let profileURL = URL(filePath: identifier)
+      .appendingPathExtension("mobileconfig")
+    try profileDict.write(to: profileURL)
+    print(profileURL.relativePath)
   }
 }

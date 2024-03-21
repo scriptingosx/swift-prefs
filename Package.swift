@@ -5,6 +5,9 @@ import PackageDescription
 
 let package = Package(
   name: "swift-prefs",
+  platforms: [
+    .macOS(.v13)
+  ],
   products: [
     .executable(name: "prefs", targets: ["prefs"]),
     .executable(name: "plist2profile", targets: ["plist2profile"])
