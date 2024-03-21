@@ -58,13 +58,24 @@ You can also add the `--value` option to show just the value in the output (migh
 
 ## plist2profile
 
-This tool is a modern re-interpretation of [Tim Sutton's mcxToProfile](https://github.com/timsutton/mcxToProfile).
+This tool is a re-interpretation in Swift of [Tim Sutton's mcxToProfile](https://github.com/timsutton/mcxToProfile).
 
 It will convert a normal flat plist file into a custom mobileconfig/configuration profile that can be used for manual installation or with an MDM server.
 
-In the simplest form, you use it like this:
+In the simplest form, use it like this:
 
 ```
-% plist2profile --plist settings.plist --identifier com.example.settings
+% plist2profile --identifier example.settings com.example.settings.plist
 ```
+
+This will generate a file named `example.settings.mobileconfig` in the current working directory which manages the preference keys in the `com.example.settings.plist` in the `com.example.settings` preference domain. You can add multiple plist files.
+
+The preference domain for the settings is determined from the file name of each plist file given (removing the `plist` file extension).
+
+You can add a display and organization name that will be used in the respective fields using the `--displayname` and `--organization` options.
+
+By default, the profile is created with a `System` scope. you can change it to `User` with the `--user` flag.
+
+There are two ways to assemble custom preference profile, the 'traditional' mcx format and a more modern format, which [Bob Gendler described in this post](https://boberito.medium.com/config-profile-and-manage-all-the-things-just-about-cafea8627d4b). This tool creates the modern format by default, but can also create the traditional format when you set the `--mcx` key.
+
 

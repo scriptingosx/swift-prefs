@@ -17,11 +17,11 @@ struct Plist2Profile: ParsableCommand {
     version: "0.1"
   )
 
-  // MARK: arguments,options, flags
+  // MARK: arguments, options, flags
   @Option(
     name: .shortAndLong,
     help: ArgumentHelp(
-      "the identifier for the profile",
+      "The identifier for the profile.",
       valueName: "identifier"
     )
   )
@@ -29,39 +29,39 @@ struct Plist2Profile: ParsableCommand {
 
   @Argument(
     help: ArgumentHelp(
-      "Path to a plist to be added as a profile payload. Can be specified multiple times.",
+      "Path to a plist file to be added as a profile payload. Can be given more than once.",
       valueName: "plist"
     )
   )
   var plistPaths: [String]
 
   @Option(
+    name: [.customShort("d"), .customLong("displayname")],
+    help: "Display name for the profile. (default: 'plist2profile: <identifier>')"
+  )
+  var displayName = ""
+
+  @Option(
     name: [.customShort("g"), .customLong("organization")],
-    help: "Cosmetic name for the organization deploying the profile."
+    help: "Organization field for the profile."
   )
   var organization = ""
 
   @Option(
     name: [.customShort("o"), .customLong("output")],
-    help: "Output path for profile. Defaults to 'identifier.mobileconfig' in the current working directory."
+    help: "Output path for profile. (default: '<identifier>.mobileconfig')"
   )
   var outputPath = ""
 
-  @Option(
-    name: [.customShort("d"), .customLong("displayname")],
-    help: "Display name for profile. Defaults to 'plist2profile: <first domain>'."
-  )
-  var displayName = ""
-
   @Flag(
     name: .customLong("user"),
-    help: "sets the scope for the profile to 'User' (otherwise scope is 'System')"
+    help: "Sets the scope for the profile to 'User'. (default is 'System')"
   )
   var userScope = false
   
   @Flag(
     name: .customLong("mcx"),
-    help: "creates the profile in macx format (default: modern)"
+    help: "Creates the profile in the traditional mcx format. (default: modern)"
     )
   var mcx = false
 
@@ -111,7 +111,7 @@ struct Plist2Profile: ParsableCommand {
 
     // if output is empty, generate file name
     if outputPath.isEmpty {
-      outputPath = identifier.appending(".mobileConfig")
+      outputPath = identifier.appending(".mobileconfig")
     }
 
     if userScope {
