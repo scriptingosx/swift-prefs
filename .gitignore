@@ -1,6 +1,7 @@
 .DS_Store
 /.build
 /Packages
+/examples
 xcuserdata/
 DerivedData/
 .swiftpm/configuration/registries.json
